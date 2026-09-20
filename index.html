@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafío Matemático con Abejín - Multijugador</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- MathJax -->
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+
+    <button id="open-instructions-btn" class="help-btn" title="Instrucciones">❓ Reglas</button>
+
+    <h1>Desafío Matemático 🐝 <span id="turn-indicator" class="turn-indicator"></span></h1>
+
+    <!-- Panel de Estado Multijugador -->
+    <div id="connection-status-bar" class="status-bar hidden">
+        <span id="status-text">Desconectado</span>
+    </div>
+
+    <div id="game-board"></div>
+
+    <!-- Modal Inicial: Nombre y Conexión P2P Rediseñado -->
+    <div id="start-modal" class="modal">
+        <div class="lobby-card">
+            <div class="lobby-header">
+                <div class="badge-tag">🎮 Modo Multijugador</div>
+                <h2>¡Bienvenido al Desafío!</h2>
+                <p class="subtitle">Ingresa tu nombre y elige cómo quieres jugar hoy</p>
+            </div>
+
+            <div class="form-group">
+                <label for="player-name-input">
+                    <span>👤</span> Tu Nombre
+                </label>
+                <div class="input-wrapper">
+                    <input type="text" id="player-name-input" placeholder="Nombre completo" autocomplete="off" />
+                </div>
+            </div>
+
+            <div class="divider">
+                <span>¿CÓMO QUIERES JUGAR?</span>
+            </div>
+
+            <div class="lobby-options">
+                <!-- Opción A: Crear Sala -->
+                <div class="option-card primary-option">
+                    <div class="option-header-title">
+                        <span class="option-icon">👑</span>
+                        <h3>Crear una Sala (Anfitrión)</h3>
+                    </div>
+                    <p>Sé el anfitrión y comparte el código con tu compañero.</p>
+                    <button id="host-game-btn" class="btn btn-primary">
+                        <span>Crear Nueva Partida</span> 🏠
+                    </button>
+                    <div id="host-id-container" class="hidden host-code-box">
+                        <p>Comparte este código de 3 cifras con tu oponente:</p>
+                        <div id="display-peer-id" class="code-box">---</div>
+                    </div>
+                </div>
+
+                <!-- Opción B: Unirse a Sala -->
+                <div class="option-card secondary-option">
+                    <div class="option-header-title">
+                        <span class="option-icon">🚀</span>
+                        <h3>Unirse a una Sala</h3>
+                    </div>
+                    <p>Ingresa el código proporcionado por el anfitrión.</p>
+                    <div class="join-input-group">
+                        <input type="number" id="join-peer-id-input" placeholder="Ej: 458" min="100" max="999" autocomplete="off" />
+                        <button id="join-game-btn" class="btn btn-success">
+                            Unirse 🚀
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Instrucciones -->
+    <div id="instructions-modal" class="modal modal-hidden">
+        <div class="modal-content instructions-modal-content">
+            <h2>🐝 ¿Cómo Jugar en Línea?</h2>
+            <ul class="instructions-list">
+                <li><strong>Modalidad 2 Jugadores:</strong> Se juega por turnos alternados.</li>
+                <li><strong>Objetivo:</strong> El primer jugador en llegar a la última columna y resolverla gana la partida.</li>
+                <li><strong>Avance:</strong> Solo puedes interactuar con las cartas en tu turno activo.</li>
+                <li><strong>Comodines 🃏:</strong>
+                    <br>🚀 <strong>Avanzas:</strong> Te pasa al siguiente nivel directo.
+                    <br>☠️ <strong>Reinicia:</strong> Te devuelve al inicio del tablero.
+                </li>
+            </ul>
+            <button id="close-instructions-btn">¡Entendido!</button>
+        </div>
+    </div>
+
+    <!-- Modal para las preguntas -->
+    <div id="question-modal" class="modal modal-hidden">
+        <div class="modal-content">
+            <h2 id="question-text"></h2>
+            <div id="answer-options"></div>
+            <button id="submit-answer">Responder</button>
+            <p id="feedback-text"></p>
+        </div>
+    </div>
+
+    <!-- Contenedor del Diploma -->
+    <div id="certificate-modal" class="modal modal-hidden">
+        <div class="modal-content certificate-content">
+            <div class="certificate-border" id="certificate-to-print">
+                <div class="certificate-header">
+                    <h2>🏆 DIPLOMA DE EXCELENCIA 🏆</h2>
+                    <p>Otorgado con orgullo a:</p>
+                </div>
+                <h1 id="cert-player-name">Nombre del Estudiante</h1>
+                <p class="certificate-body">
+                    Por haber superado exitosamente todas las pruebas de razonamiento matemático en modalidad multijugador en el <strong>Desafío Matemático</strong>.
+                </p>
+                <div class="certificate-footer">
+                    <div class="signature">
+                        <hr>
+                        <p>Docente de Matemáticas</p>
+                    </div>
+                    <div class="date-container">
+                        <p id="cert-date"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="certificate-actions">
+                <button id="print-cert-btn">🖨️ Imprimir / Guardar PDF</button>
+                <button id="restart-game-btn">🔄 Jugar de Nuevo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carga de Scripts en Orden Correcto -->
+    <script src="preguntas.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="peerJS.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
